@@ -1,7 +1,7 @@
 #if defined __inc_LiveDialogs
-#endinput
+    #endinput
 #else
-#define __inc_LiveDialogs
+    #define __inc_LiveDialogs
 #endif
 
 //                                         _             
@@ -39,6 +39,7 @@
 #define DialogRender:                   if(Dialog_IsRender(playerid))
 #define DialogQuery:<%0,%1>             if(!Dialog_Query(playerid, %0, %1)) return DIALOG_HIDE
 #define ResponseRight:                  if(!Dialog_IsRender(playerid)) if(!Dialog_IsResponse(playerid))
+#define ResponseLeft:					if(!Dialog_IsRender(playerid)) if(Dialog_IsResponse(playerid))
 #define DialogCollections:<%0>          for(new %0, %0__ncollect, %0__index; Dialog_CollectFor(playerid, %0, %0__ncollect); %0__index++)
 #define DialogCollect:<%0>              Dialog_AddCollection(playerid, %0)
 #define dialog%0(%2)                    forward DIALOG:%0(playerid);public DIALOG:%0(%2)
@@ -47,7 +48,6 @@
 #if !defined Dialog
     #define Dialog:         #
 #endif
-
 
 enum DIALOG
 {
@@ -81,10 +81,10 @@ static pDialogValue         [MAX_PLAYERS][DIALOG_MAX_DEEP][DIALOG_MAX_LIST_ITEMS
 static Cache:pDialogCache   [MAX_PLAYERS][DIALOG_MAX_DEEP];
 static pDialogInput         [MAX_PLAYERS][DIALOG_MAX_DEEP][144];
 static pDialog              [MAX_PLAYERS][dialog_data];
-static DialogQuery			[4096];
+static stock DialogQuery	[4096];
 
 #if defined _INC_y_va
-static dialogbuffer         [MAX_DIALOG_BODY];
+    static dialogbuffer         [MAX_DIALOG_BODY];
 #endif
 
 forward DIALOG:Dialog_Reopen(playerid);
@@ -116,15 +116,14 @@ stock Dialog_Incr(playerid) {
 }
 
 #if defined _INC_y_va
-stock Dialog_Head(playerid, const string:head[], va_args<>)
+    stock Dialog_Head(playerid, const string:head[], va_args<>)
 #else
-stock Dialog_Head(playerid, const string:head[])
+    stock Dialog_Head(playerid, const string:head[])
 #endif
 {
     if(pDialog[playerid][dialog_history_deep][pDialog[playerid][dialog_currentdeep]] == pDialog[playerid][dialog_deep])
     {
         #if defined _INC_y_va
-            dbg(head, va_start<2>);
             format(pDialog[playerid][dialog_head], MAX_DIALOG_HEAD, head, va_start<2>);
         #else
 			pDialog[playerid][dialog_head][0] = EOS;
@@ -136,9 +135,9 @@ stock Dialog_Head(playerid, const string:head[])
 }
 
 #if defined _INC_y_va
-stock Dialog_SetHead(playerid, const string:head[], va_args<>)
+    stock Dialog_SetHead(playerid, const string:head[], va_args<>)
 #else
-stock Dialog_SetHead(playerid, const string:head[])
+    stock Dialog_SetHead(playerid, const string:head[])
 #endif
 {
 	if(pDialog[playerid][dialog_function] == EOS) {
@@ -148,7 +147,6 @@ stock Dialog_SetHead(playerid, const string:head[])
 		return false;
 	}
 	#if defined _INC_y_va
-		dbg(head, va_start<2>);
 		format(pDialog[playerid][dialog_head], MAX_DIALOG_HEAD, head, va_start<2>);
 	#else
 		pDialog[playerid][dialog_head][0] = EOS;
@@ -191,9 +189,9 @@ stock bool:Dialog_IsRender(playerid)
 }
 
 #if defined _INC_y_va
-stock bool:Dialog_Body(playerid, DIALOG_STYLE:style, const string:body[], va_args<>)
+    stock bool:Dialog_Body(playerid, DIALOG_STYLE:style, const string:body[], va_args<>)
 #else
-stock bool:Dialog_Body(playerid, DIALOG_STYLE:style, const string:body[])
+    stock bool:Dialog_Body(playerid, DIALOG_STYLE:style, const string:body[])
 #endif
 {
     if(pDialog[playerid][dialog_history_deep][pDialog[playerid][dialog_currentdeep]] == pDialog[playerid][dialog_deep])
@@ -236,9 +234,9 @@ stock bool:Dialog_Body(playerid, DIALOG_STYLE:style, const string:body[])
 }
 
 #if defined _INC_y_va
-stock Dialog_BodyHead(playerid, const string:body[], va_args<>)
+    stock Dialog_BodyHead(playerid, const string:body[], va_args<>)
 #else
-stock Dialog_BodyHead(playerid, const string:body[])
+    stock Dialog_BodyHead(playerid, const string:body[])
 #endif
 {
     if(Dialog_IsRender(playerid))
@@ -262,7 +260,7 @@ stock Dialog_Number(playerid)
     return strval(pDialogInput[playerid][pDialog[playerid][dialog_currentdeep]]);
 }
 
-stock Dialog_Text(playerid, inputtext[], sizes = sizeof inputtext)
+stock Dialog_Text(playerid, string:inputtext[], sizes = sizeof inputtext)
 {
     strcat(inputtext, pDialogInput[playerid][pDialog[playerid][dialog_currentdeep]], sizes);
     return strlen(pDialogInput[playerid][pDialog[playerid][dialog_currentdeep]]);
@@ -499,7 +497,7 @@ stock Dialog_Create(playerid, const string:function[])
     CallLocalFunction(function, "i", playerid);
 }
 
-public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
+public OnDialogResponse(playerid, dialogid, response, listitem, string:inputtext[])
 {
 	Dialog_Response(playerid, dialogid, response, listitem, inputtext);
 	#if defined lda_OnDialogResponse
@@ -508,6 +506,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 		return 1;
 	#endif
 }
+
 #if defined _ALS_OnDialogResponse
 	#undef OnDialogResponse
 #else
@@ -519,9 +518,9 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 #endif
 
 #if defined _INC_y_va
-stock Dialog_Query(playerid, MySQL:connect, const string:query[], va_args<>)
+    stock Dialog_Query(playerid, MySQL:connect, const string:query[], va_args<>)
 #else
-stock Dialog_Query(playerid, MySQL:connect, const string:query[])
+    stock Dialog_Query(playerid, MySQL:connect, const string:query[])
 #endif
 {
     if(pDialogCache[playerid][pDialog[playerid][dialog_currentdeep]] == Cache:0)
