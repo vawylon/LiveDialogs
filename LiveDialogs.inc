@@ -15,6 +15,8 @@
 // tg @vawylon
 // vk vk.com/vawylon 
 
+#include <a_mysql>
+
 #if defined FILTERSCRIPT
     #define LiveDIALOG_ID               5122
 #else
