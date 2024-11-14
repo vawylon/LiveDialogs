@@ -46,6 +46,10 @@
 #define DialogCollect:<%0>              Dialog_AddCollection(playerid, %0)
 #define dialog%0(%2)                    forward DIALOG:%0(playerid);public DIALOG:%0(%2)
 #define LDIsNull(%1) 					((!(%1[0])) || (((%1[0]) == '\1') && (!(%1[1]))))
+#define DialogGoto:<%0>                 Dialog_Back(playerid, %0)
+
+#define DialogClose                     DIALOG_CLOSE
+#define DialogMain                      DialogGoto:<0>
 
 #if !defined Dialog
     #define Dialog:         #
@@ -57,10 +61,7 @@ enum DIALOG
     DIALOG_REOPEN               = 0,
     DIALOG_MAIN                 = 1,
     DIALOG_CLOSE                = 2,
-    DIALOG_BACK                 = 3,
-    DIALOG_BACK_BACK            = 4,
-    DIALOG_BACK_BACK_BACK       = 5,
-    DIALOG_BACK_BACK_BACK_BACK  = 6,
+    DIALOG_BACK                 = 3
 }
 
 enum dialog_data {
@@ -91,9 +92,9 @@ static stock DialogQuery	[4096];
 
 forward DIALOG:Dialog_Reopen(playerid);
 forward DIALOG:Dialog_Main(playerid);
-forward Dialog_OnQuery(playerid, deep, const string:func[]);
+forward Dialog_OnQuery(playerid, deep, const func[]);
 
-stock DIALOG:Dialog_Button(playerid, const string:left[], const string:right[] = "")
+stock DIALOG:Dialog_Button(playerid, const left[], const right[] = "")
 {
     if(pDialog[playerid][dialog_head][0] == EOS && pDialog[playerid][dialog_body][0] == EOS) {
         return DIALOG_CLOSE;
@@ -118,9 +119,9 @@ stock Dialog_Incr(playerid) {
 }
 
 #if defined _INC_y_va
-    stock Dialog_Head(playerid, const string:head[], va_args<>)
+    stock Dialog_Head(playerid, const head[], va_args<>)
 #else
-    stock Dialog_Head(playerid, const string:head[])
+    stock Dialog_Head(playerid, const head[])
 #endif
 {
     if(pDialog[playerid][dialog_history_deep][pDialog[playerid][dialog_currentdeep]] == pDialog[playerid][dialog_deep])
@@ -136,10 +137,33 @@ stock Dialog_Incr(playerid) {
     return 1;
 }
 
+stock bool:Dialog_IsRender(playerid)
+{
+    if(pDialog[playerid][dialog_history_deep][pDialog[playerid][dialog_currentdeep]] == pDialog[playerid][dialog_deep])
+    {
+        return true;
+    }
+    else
+    {
+        if(pDialog[playerid][dialog_history_list][pDialog[playerid][dialog_currentdeep]] == pDialog[playerid][dialog_list])
+        {
+            return false;
+        }
+        else
+        {
+            if(pDialog[playerid][dialog_style] != DIALOG_STYLE_LIST && pDialog[playerid][dialog_style] != DIALOG_STYLE_TABLIST && pDialog[playerid][dialog_style] != DIALOG_STYLE_TABLIST_HEADERS) 
+            {
+                return false;
+            }
+            return true;
+        }
+    }
+}
+
 #if defined _INC_y_va
-    stock Dialog_SetHead(playerid, const string:head[], va_args<>)
+    stock Dialog_SetHead(playerid, const head[], va_args<>)
 #else
-    stock Dialog_SetHead(playerid, const string:head[])
+    stock Dialog_SetHead(playerid, const head[])
 #endif
 {
 	if(pDialog[playerid][dialog_function] == EOS) {
@@ -167,33 +191,10 @@ stock Dialog_GetValue(playerid, listitem)
     return pDialogValue[playerid][pDialog[playerid][dialog_currentdeep]][listitem];
 }
 
-stock bool:Dialog_IsRender(playerid)
-{
-    if(pDialog[playerid][dialog_history_deep][pDialog[playerid][dialog_currentdeep]] == pDialog[playerid][dialog_deep])
-    {
-        return true;
-    }
-    else
-    {
-        if(pDialog[playerid][dialog_history_list][pDialog[playerid][dialog_currentdeep]] == pDialog[playerid][dialog_list])
-        {
-            return false;
-        }
-        else
-        {
-            if(pDialog[playerid][dialog_style] != DIALOG_STYLE_LIST && pDialog[playerid][dialog_style] != DIALOG_STYLE_TABLIST && pDialog[playerid][dialog_style] != DIALOG_STYLE_TABLIST_HEADERS) 
-            {
-                return false;
-            }
-            return true;
-        }
-    }
-}
-
 #if defined _INC_y_va
-    stock bool:Dialog_Body(playerid, DIALOG_STYLE:style, const string:body[], va_args<>)
+    stock bool:Dialog_Body(playerid, DIALOG_STYLE:style, const body[], va_args<>)
 #else
-    stock bool:Dialog_Body(playerid, DIALOG_STYLE:style, const string:body[])
+    stock bool:Dialog_Body(playerid, DIALOG_STYLE:style, const body[])
 #endif
 {
     if(pDialog[playerid][dialog_history_deep][pDialog[playerid][dialog_currentdeep]] == pDialog[playerid][dialog_deep])
@@ -236,9 +237,9 @@ stock bool:Dialog_IsRender(playerid)
 }
 
 #if defined _INC_y_va
-    stock Dialog_BodyHead(playerid, const string:body[], va_args<>)
+    stock Dialog_BodyHead(playerid, const body[], va_args<>)
 #else
-    stock Dialog_BodyHead(playerid, const string:body[])
+    stock Dialog_BodyHead(playerid, const body[])
 #endif
 {
     if(Dialog_IsRender(playerid))
@@ -262,7 +263,7 @@ stock Dialog_Number(playerid)
     return strval(pDialogInput[playerid][pDialog[playerid][dialog_currentdeep]]);
 }
 
-stock Dialog_Text(playerid, string:inputtext[], sizes = sizeof inputtext)
+stock Dialog_Text(playerid, inputtext[], sizes = sizeof inputtext)
 {
     strcat(inputtext, pDialogInput[playerid][pDialog[playerid][dialog_currentdeep]], sizes);
     return strlen(pDialogInput[playerid][pDialog[playerid][dialog_currentdeep]]);
@@ -276,17 +277,9 @@ public DIALOG:Dialog_Reopen(playerid)
     return DIALOG_CLOSE;
 }
 
-stock Dialog_Index(playerid) 
+stock Dialog_GetDeep(playerid) 
 {
     return pDialog[playerid][dialog_currentdeep];
-}
-
-public DIALOG:Dialog_Main(playerid)
-{
-    pDialog[playerid][dialog_currentdeep] = -1;
-    pDialog[playerid][dialog_deep] =0;
-    CallLocalFunction(pDialog[playerid][dialog_function], "i", playerid);
-    return DIALOG_CLOSE;
 }
 
 stock bool:Dialog_AddCollection(playerid, value) 
@@ -309,7 +302,7 @@ stock bool:Dialog_CollectFor(playerid, &value, &next)
     return false;
 }
 
-stock void:Dialog_Response(playerid, dialogid, response, listitem, const string:inputtext[])
+stock void:Dialog_Response(playerid, dialogid, response, listitem, const inputtext[])
 {
     if(LiveDIALOG_ID != dialogid) {
         return;
@@ -335,6 +328,57 @@ stock Dialog_SelectItem(playerid)
     return pDialog[playerid][dialog_history_list][pDialog[playerid][dialog_currentdeep]];
 }
 
+stock bool:Dialog_CacheDestroy(playerid, deep) 
+{
+    if(pDialogCache[playerid][deep])
+    {
+        printf("Cache Delete[%d]", deep);
+        cache_delete(pDialogCache[playerid][deep]);
+        pDialogCache[playerid][deep] = Cache:0;
+        return true;
+    }
+    return false;
+}
+
+stock bool:Dialog_CacheDestroyAll(playerid)
+{
+    for(new i; i<DIALOG_MAX_DEEP; i++) {
+        if(pDialog[playerid][dialog_currentdeep]) {
+            printf("Cache Delete[%d]", i);
+            cache_delete(pDialogCache[playerid][i]);
+            pDialogCache[playerid][i] = Cache:0;
+        }
+    }
+    return true;
+}
+
+stock DIALOG:Dialog_Back(playerid, deep)
+{
+    if(pDialog[playerid][dialog_deep] < deep) {
+        return DIALOG_CLOSE;
+    }
+    if (0 <= deep < DIALOG_MAX_DEEP )
+    {
+        pDialog[playerid][dialog_deep] = deep + 1;
+        for(new i = deep+1; i < DIALOG_MAX_DEEP; i++)
+        {
+            pDialog[playerid][dialog_history_list][i] = 0;
+            pDialog[playerid][dialog_history_deep][i] = 0;
+            pDialog[playerid][dialog_response][i] = 0;
+            DialogCollectCount[playerid][i] = 0;
+            pDialogInput[playerid][i][0] = EOS;
+            for(new j; j<DIALOG_MAX_LIST_ITEMS; j++)
+            {
+                pDialogValue[playerid][i][j] = 0;
+            }
+            Dialog_CacheDestroy(playerid, i);
+        }
+        pDialog[playerid][dialog_currentdeep] = -1;
+        return DIALOG_REOPEN;
+    }
+    return DIALOG_CLOSE;
+}
+
 stock void:Dialog_Result(playerid, DIALOG:result)
 {
     switch(result)
@@ -345,117 +389,20 @@ stock void:Dialog_Result(playerid, DIALOG:result)
         }
         case DIALOG_REOPEN:
         {
-            if(pDialogCache[playerid][pDialog[playerid][dialog_deep]] != Cache:0) 
-            {
-                cache_delete(pDialogCache[playerid][pDialog[playerid][dialog_deep]]);
-                pDialogCache[playerid][pDialog[playerid][dialog_deep]] = Cache:0;
-            }
-            DialogCollectCount[playerid][pDialog[playerid][dialog_deep]] = 0;
             Dialog_Reopen(playerid);
             return;
         }
         case DIALOG_BACK:
         {
-            pDialog[playerid][dialog_currentdeep] = -1;
-            for(new i; i<2 && pDialog[playerid][dialog_deep] - i >= 0; i++)
-            {
-                if(pDialogCache[playerid][pDialog[playerid][dialog_deep]]) 
-                {
-                    cache_delete(pDialogCache[playerid][pDialog[playerid][dialog_deep]]);
-                    pDialogCache[playerid][pDialog[playerid][dialog_deep]] = Cache:0;
-                }
-                for(new j; j<sizeof pDialogValue[][]; j++) pDialogValue[playerid][pDialog[playerid][dialog_deep]][j] = 0;
-                DialogCollectCount[playerid][pDialog[playerid][dialog_deep]] = 0;
-                pDialog[playerid][dialog_deep] --;
-            }
-            if(pDialog[playerid][dialog_deep] < 0) {
-                pDialog[playerid][dialog_deep] = 0;
-            }
-            CallLocalFunction(pDialog[playerid][dialog_function], "i", playerid);
+            Dialog_Back(playerid, pDialog[playerid][dialog_deep] - 2);
+            Dialog_Reopen(playerid);
             return;
-        }
-        case DIALOG_BACK_BACK:
-        {
-            pDialog[playerid][dialog_currentdeep] = -1;
-            for(new i; i<3 && pDialog[playerid][dialog_deep] -1 >= 0; i++)
-            {
-                if(pDialogCache[playerid][pDialog[playerid][dialog_deep]]) 
-                {
-                    cache_delete(pDialogCache[playerid][pDialog[playerid][dialog_deep]]);
-                    pDialogCache[playerid][pDialog[playerid][dialog_deep]] = Cache:0;
-                }
-                for(new j; j<sizeof pDialogValue[][]; j++)
-                {
-                    pDialogValue[playerid][pDialog[playerid][dialog_deep]][j] = 0;
-                }
-                DialogCollectCount[playerid][pDialog[playerid][dialog_deep]] = 0;
-                pDialog[playerid][dialog_deep] --;
-            }
-            if(pDialog[playerid][dialog_deep] < 0) {
-                pDialog[playerid][dialog_deep] = 0;
-            }
-            CallLocalFunction(pDialog[playerid][dialog_function], "i", playerid);
-            return;
-        }
-        case DIALOG_BACK_BACK_BACK:
-        {
-            pDialog[playerid][dialog_currentdeep] = -1;
-            for(new i; i<4 && pDialog[playerid][dialog_deep] -1 >= 0; i++)
-            {
-                if(pDialogCache[playerid][pDialog[playerid][dialog_deep]]) 
-                {
-                    cache_delete(pDialogCache[playerid][pDialog[playerid][dialog_deep]]);
-                    pDialogCache[playerid][pDialog[playerid][dialog_deep]] = Cache:0;
-                }
-                for(new j; j<sizeof pDialogValue[][]; j++)
-                {
-                    pDialogValue[playerid][pDialog[playerid][dialog_deep]][j] = 0;
-                }
-                DialogCollectCount[playerid][pDialog[playerid][dialog_deep]] = 0;
-                pDialog[playerid][dialog_deep] --;
-            }
-            if(pDialog[playerid][dialog_deep] < 0) {
-                pDialog[playerid][dialog_deep] = 0;
-            }
-            CallLocalFunction(pDialog[playerid][dialog_function], "i", playerid);
-            return;
-        }
-        case DIALOG_BACK_BACK_BACK_BACK:
-        {
-            pDialog[playerid][dialog_currentdeep] = -1;
-            for(new i; i<5 && pDialog[playerid][dialog_deep] >= 0; i++)
-            {
-                if(pDialogCache[playerid][pDialog[playerid][dialog_deep]]) 
-                {
-                    cache_delete(pDialogCache[playerid][pDialog[playerid][dialog_deep]]);
-                    pDialogCache[playerid][pDialog[playerid][dialog_deep]] = Cache:0;
-                }
-                for(new j; j<sizeof pDialogValue[][]; j++)
-                {
-                    pDialogValue[playerid][pDialog[playerid][dialog_deep]][j] = 0;
-                }
-                DialogCollectCount[playerid][pDialog[playerid][dialog_deep]] = 0;
-                pDialog[playerid][dialog_deep] --;
-            }
-            pDialog[playerid][dialog_deep] -= 5;
-            if(pDialog[playerid][dialog_deep] < 0) 
-            {
-                pDialog[playerid][dialog_deep] = 0;
-            }
-            CallLocalFunction(pDialog[playerid][dialog_function], "i", playerid);
         }
         case DIALOG_MAIN:
         {
-            for(new i; i< sizeof pDialogCache[]; i++)
-            {
-                if(pDialogCache[playerid][i]) 
-                {
-                    cache_delete(pDialogCache[playerid][i]);
-                    pDialogCache[playerid][i] = Cache:0;
-                }
-                DialogCollectCount[playerid][pDialog[playerid][dialog_deep]] = 0;
-            }
-            Dialog_Main(playerid);
+            Dialog_Back(playerid, 0);
+            Dialog_Reopen(playerid);
+            return;
         }
         case DIALOG_HIDE: 
         {
@@ -464,8 +411,11 @@ stock void:Dialog_Result(playerid, DIALOG:result)
     }
 }
 
-stock Dialog_Create(playerid, const string:function[])
+stock bool:Dialog_Create(playerid, const function[])
 {
+    if(!IsPlayerConnected(playerid)) {
+        return false;
+    }
     for(new i; i<DIALOG_MAX_DEEP; i++)
     {
         pDialog[playerid][dialog_history_list][i] = -1;
@@ -491,15 +441,17 @@ stock Dialog_Create(playerid, const string:function[])
     for(new i; i<sizeof pDialogCache[]; i++) {
         if(cache_is_valid(pDialogCache[playerid][i])) 
         {
+            printf("Cache Delete[%d]", i);
             cache_delete(pDialogCache[playerid][i]);
         }
         pDialogCache[playerid][i] = Cache:0;
     }
 
     CallLocalFunction(function, "i", playerid);
+    return true;
 }
 
-public OnDialogResponse(playerid, dialogid, response, listitem, string:inputtext[])
+public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 {
 	Dialog_Response(playerid, dialogid, response, listitem, inputtext);
 	#if defined lda_OnDialogResponse
@@ -520,9 +472,9 @@ public OnDialogResponse(playerid, dialogid, response, listitem, string:inputtext
 #endif
 
 #if defined _INC_y_va
-    stock Dialog_Query(playerid, MySQL:connect, const string:query[], va_args<>)
+    stock Dialog_Query(playerid, MySQL:connect, const query[], va_args<>)
 #else
-    stock Dialog_Query(playerid, MySQL:connect, const string:query[])
+    stock Dialog_Query(playerid, MySQL:connect, const query[])
 #endif
 {
     if(pDialogCache[playerid][pDialog[playerid][dialog_currentdeep]] == Cache:0)
@@ -542,7 +494,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, string:inputtext
     }
 }
 
-public Dialog_OnQuery(playerid, deep, const string:func[])
+public Dialog_OnQuery(playerid, deep, const func[])
 {
 	if (!strcmp(pDialog[playerid][dialog_function], func ) && !LDIsNull(pDialog[playerid][dialog_function]) && !LDIsNull(func))
 	{
@@ -550,27 +502,4 @@ public Dialog_OnQuery(playerid, deep, const string:func[])
 	    pDialogCache[playerid][deep] = cache_save();
 	    Dialog_Result(playerid, DIALOG:CallLocalFunction(pDialog[playerid][dialog_function], "i", playerid));
 	}
-}
-
-stock Dialog_CacheDestroy(playerid, deep) 
-{
-    if(pDialogCache[playerid][deep])
-    {
-        cache_delete(pDialogCache[playerid][deep]);
-        pDialogCache[playerid][deep] = Cache:0;
-        return true;
-    }
-    return false;
-}
-
-stock Dialog_DestroyCache(playerid, deep = 1)
-{
-    for(new i; i<deep; i++) {
-        if(pDialog[playerid][dialog_currentdeep] - i < 0) {
-            break;
-        }
-        cache_delete(pDialogCache[playerid][ pDialog[playerid][dialog_currentdeep] - i]);
-        pDialogCache[playerid][ pDialog[playerid][dialog_currentdeep] - i] = Cache:0;
-    }
-    return 1;
 }

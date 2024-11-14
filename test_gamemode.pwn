@@ -1,5 +1,4 @@
 #include <open.mp>
-#include <a_mysql>
 #include <LiveDialogs>
 
 #define START_CASH 			1000
@@ -25,6 +24,7 @@ main()
 	printf("  -------------------------------");
 	printf("  |  LiveDialogs Test! 			|");
 	printf("  -------------------------------");
+	
 	printf(" ");
 }
 
@@ -213,6 +213,20 @@ public OnPlayerCommandText(playerid, cmdtext[])
 	{
 		Dialog_Create(playerid, Dialog:Menu);
 		return 1;
+	}
+	if(!strcmp(cmdtext, "/livedialogs"))
+	{
+		Dialog_Create(playerid, Dialog:Main);
+		return 1;
+	}
+	if(!strcmp(cmdtext, "/deep"))
+	{
+		Dialog_Create(playerid, Dialog:Deep);
+		return 1;
+	}
+	if(!strcmp(cmdtext, "/deleteaccount"))
+	{
+		Dialog_Create(playerid, Dialog:DeleteAccount);
 	}
 	return 0;
 }
@@ -462,6 +476,183 @@ dialog Menu(playerid)
 				}
 			}
 			Button:<"Установить", "Назад">;
+		}
+	}
+	Button:<"Выбрать", "Закрыть">;
+}
+
+dialog Main(playerid)
+{
+    Create:<"LiveDialogs - информация">
+    {
+        ResponseRight:return DIALOG_CLOSE;
+        MessageBox:<"Всё это написанно в одной функции">
+        {
+            Create:<"LiveDialogs - возврат на уровень ниже">
+            {
+                ResponseRight:return DIALOG_BACK;
+                MessageBox:<"Нажми назад и ты вернёшся">
+                {
+                    ResponseRight:return DIALOG_BACK;
+                    Create:<"LiveDialogs - возможность вернуться в главное окно">
+                    {
+                        ResponseRight:return DIALOG_MAIN;
+                        MessageBox:<"Нажми \"Главная\" и ты вернёшся в главное меню!">
+                        {
+                            Create:<"LiveDialogs - циклы">
+                            {
+                                ListHead:<"Выбери пункт:">;
+                                for(new i; i<10; i++)
+                                {
+									new str[92];
+									format(str, sizeof str, "Пункт #%d", i);
+                                    ListItem:<str>
+                                    {
+                                        SendClientMessage(playerid, -1, "Выбран: %d пункт!", i);
+                                        return DIALOG_CLOSE;
+                                    }
+                                }
+                            }
+                        }
+                        Button:<"Далее", "Главная">;
+                    }
+                }
+            }
+            Button:<"Далее", "Назад">;
+        }
+    }
+    Button:<"Далее", "Закрыть">;
+}
+
+dialog DTest(playerid)
+{
+	enum deep_data {
+		deep_id,
+		deep_dialog[92]
+	}
+	new dialogdata[][deep_data] = 
+	{
+		{0, "Диалог 1"},
+		{0, "Диалог 2"},
+		{0, "Игроки"},
+		{0, "Диалог 3"},
+		{0, "Диалог 4"}
+	};
+	Create:<dialogdata[0][deep_dialog]>
+	{
+		dialogdata[0][deep_id] = Dialog_GetDeep(playerid);
+		MessageBox:<dialogdata[0][deep_dialog]>
+		{
+			Create:<dialogdata[1][deep_dialog]>
+			{
+				dialogdata[1][deep_id] = Dialog_GetDeep(playerid);
+				MessageBox:<dialogdata[1][deep_dialog]>
+				{
+					Create:<dialogdata[2][deep_dialog]>
+					{
+						dialogdata[2][deep_id] = Dialog_GetDeep(playerid);
+						DialogQuery:<mysql, "SELECT * FROM `accounts`">;
+						new deepid = Dialog_GetDeep(playerid);
+						new rows = cache_num_rows();
+						ListItem:<"Reopen">
+						{
+							return DIALOG_REOPEN;
+						}
+						for(new i; i<rows; i++)
+						{
+							new nickname[MAX_PLAYER_NAME];
+							cache_get_value_name(i, "pNickName", nickname);
+							ListItem:<nickname>
+							{
+								Create:<dialogdata[3][deep_dialog]>
+								{
+									ResponseRight: return DIALOG_BACK;
+									dialogdata[3][deep_id] = Dialog_GetDeep(playerid);
+									MessageBox:<dialogdata[3][deep_dialog]>
+									{
+										Create:<dialogdata[4][deep_dialog]>
+										{
+											dialogdata[4][deep_id] = Dialog_GetDeep(playerid);
+											ListItem:<"Удалить кэш и вернуться назад">
+											{
+												Dialog_CacheDestroy(playerid, deepid);
+												return DIALOG_BACK;
+											}
+											ListItem:<"Удалить кэш и открыть окно заново">
+											{
+												Dialog_CacheDestroy(playerid, deepid);
+												return DIALOG_REOPEN;
+											}
+											ListItem:<"Удалить кэш и открыть главное окно">
+											{
+												Dialog_CacheDestroy(playerid, deepid);
+												return DIALOG_MAIN;
+											}
+											for(new j; j<sizeof dialogdata; j++)
+											{
+												ListItem:<dialogdata[j][deep_dialog]>
+												{
+													return DialogGoto:<dialogdata[j][deep_id]>;
+												}
+											}
+										}
+										Button:<"Выбрать", "Закрыть">;
+									}
+								}
+							}
+						}
+					}
+					Button:<"Выбрать", "Назад">;
+				}
+			}
+			Button:<"Выбрать", "Закрыть">;
+		}
+	}
+	Button:<"Выбрать", "Закрыть">;
+}
+
+
+
+
+dialog DeleteAccount(playerid)
+{
+	Create:<"Диалог 1">
+	{
+		MessageBox:<"Текст">
+		{
+			Create:<"Диалог 2">
+			{
+				DialogQuery:<mysql, "SELECT * FROM `accounts` LIMIT 15">;
+
+				new deepid = Dialog_GetDeep(playerid);
+				new rows = cache_num_rows();
+				new str[128];
+
+				for(new i; i<rows; i++)
+				{
+					new nickname[MAX_PLAYER_NAME], id;
+					cache_get_value_name(i, "pNickName", nickname);
+					cache_get_value_name_int(i, "pMysqlID", id);
+					ListItem:<nickname>
+					{
+						Create:<"Удаление аккаунта">
+						{
+							ResponseRight: return DIALOG_BACK;
+							DialogRender: format(str, sizeof str, "Вы действительно хотите удалить аккаунт %s?", nickname);
+							MessageBox:<str>
+							{
+								format(str, sizeof str, "DELETE FROM `accounts` WHERE  `pMysqlID`=%d ", id);
+								mysql_tquery(mysql, str);
+
+								Dialog_CacheDestroy(playerid, deepid);
+								return DialogGoto:<deepid>;
+							}
+						}
+						Button:<"Удалить", "Назад">;
+					}
+				}
+			}
+			Button:<"Выбрать", "Назад">;
 		}
 	}
 	Button:<"Выбрать", "Закрыть">;
