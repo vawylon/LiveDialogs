@@ -332,7 +332,6 @@ stock bool:Dialog_CacheDestroy(playerid, deep)
 {
     if(pDialogCache[playerid][deep])
     {
-        printf("Cache Delete[%d]", deep);
         cache_delete(pDialogCache[playerid][deep]);
         pDialogCache[playerid][deep] = Cache:0;
         return true;
@@ -344,7 +343,6 @@ stock bool:Dialog_CacheDestroyAll(playerid)
 {
     for(new i; i<DIALOG_MAX_DEEP; i++) {
         if(pDialog[playerid][dialog_currentdeep]) {
-            printf("Cache Delete[%d]", i);
             cache_delete(pDialogCache[playerid][i]);
             pDialogCache[playerid][i] = Cache:0;
         }
@@ -441,7 +439,6 @@ stock bool:Dialog_Create(playerid, const function[])
     for(new i; i<sizeof pDialogCache[]; i++) {
         if(cache_is_valid(pDialogCache[playerid][i])) 
         {
-            printf("Cache Delete[%d]", i);
             cache_delete(pDialogCache[playerid][i]);
         }
         pDialogCache[playerid][i] = Cache:0;
