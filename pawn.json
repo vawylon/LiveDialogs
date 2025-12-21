@@ -1,0 +1,13 @@
+{
+	"user": "vawylon",
+	"repo": "LiveDialogs",
+	"entry": "test.pwn",
+	"output": "test.amx",
+	"dependencies": [
+		"openmultiplayer/omp-stdlib",
+		"pBlueG/SA-MP-MySQL:R41-4"
+	],
+	"runtime": {
+		"version": "openmp"
+	}
+}

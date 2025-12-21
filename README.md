@@ -158,5 +158,3 @@ dialog Menu(playerid)
     }
     Button:<"Выбрать", "Закрыть">;
 }
-
-```
